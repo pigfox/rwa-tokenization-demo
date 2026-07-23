@@ -1,0 +1,14 @@
+# Echidna property-fuzzing config for the shared test/Properties.sol harness.
+# Run: echidna . --contract Properties --config echidna.yaml
+testMode: property
+# The harness moves no ether (token accounting only), so it needs no balance.
+# Only fuzz the Properties harness; it owns every privileged role.
+allContracts: false
+testLimit: 100000
+seqLen: 64 # == foundry.toml invariant depth
+shrinkLimit: 5000
+seed: 20260723 # deterministic runs
+corpusDir: echidna-corpus
+stopOnFail: true
+# crytic-compile consumes the Foundry build directly; never re-download solc.
+cryticArgs: ["--foundry-ignore-compile"]

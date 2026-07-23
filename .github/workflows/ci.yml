@@ -1,0 +1,104 @@
+name: ci
+
+# Everything here runs on a clean checkout with NO secrets. Build, test,
+# coverage, static analysis, and property fuzzing need no keys — only deploying
+# (done manually from a laptop) does, and that never happens in CI.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FOUNDRY_PROFILE: ci
+  EXPECTED_PROPERTIES: 3
+
+jobs:
+  fmt:
+    name: format
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1.3.1
+        with:
+          version: v1.4.2
+      - name: forge fmt --check
+        run: forge fmt --check
+
+  forge:
+    name: build + test + coverage
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1.3.1
+        with:
+          version: stable
+      - name: forge build
+        run: forge build --sizes
+      - name: forge test
+        run: forge test -vvv
+      - name: coverage gate (100% of src/)
+        run: ./scripts/coverage.sh
+      - uses: actions/upload-artifact@v4.4.3
+        if: always()
+        with:
+          name: coverage-summary
+          path: coverage-summary.txt
+
+  slither:
+    name: slither
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1.3.1
+        with:
+          version: stable
+      - name: forge build
+        run: forge build
+      - uses: crytic/slither-action@v0.4.0
+        with:
+          slither-config: slither.config.json
+          slither-args: --ignore-compile
+          fail-on: low
+
+  echidna:
+    name: echidna
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1.3.1
+        with:
+          version: stable
+      - name: install crytic-compile + slither
+        run: pipx install crytic-compile && pipx install slither-analyzer
+      - name: install echidna
+        run: |
+          curl -fsSL -o echidna.tar.gz https://github.com/crytic/echidna/releases/download/v2.2.6/echidna-2.2.6-x86_64-linux.tar.gz
+          tar -xzf echidna.tar.gz
+          sudo mv echidna /usr/local/bin/
+      - name: fresh build for crytic
+        run: rm -rf crytic-export && forge build --force
+      - name: run echidna
+        run: |
+          out=$(echidna . --contract Properties --config echidna.yaml 2>&1)
+          echo "$out"
+          passing=$(echo "$out" | grep -c ': passing')
+          if [ "$passing" -ne "$EXPECTED_PROPERTIES" ]; then
+            echo "expected $EXPECTED_PROPERTIES passing properties, got $passing" >&2
+            exit 1
+          fi
