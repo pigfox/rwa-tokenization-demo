@@ -18,13 +18,13 @@ Chain id `84532`. All five contracts are source-verified on Basescan.
 
 | Contract | Address |
 |---|---|
-| IdentityRegistry | [`0x8FD97Ede1A00a35b2B74F0Ec84221C6791dd9b82`](https://sepolia.basescan.org/address/0x8FD97Ede1A00a35b2B74F0Ec84221C6791dd9b82) |
-| AssetRegistry | [`0x4bB2186DCF0F41F98C1a8D302b35b7c90a44D024`](https://sepolia.basescan.org/address/0x4bB2186DCF0F41F98C1a8D302b35b7c90a44D024) |
-| PriceOracle | [`0x5f307908D306987b0100b71b5de7B071D7b415Aa`](https://sepolia.basescan.org/address/0x5f307908D306987b0100b71b5de7B071D7b415Aa) |
-| RWAToken (ACME) | [`0xf6d3fcecD5aa3AC8Dc77aF05FD4CC021171cCe32`](https://sepolia.basescan.org/address/0xf6d3fcecD5aa3AC8Dc77aF05FD4CC021171cCe32) |
-| Redemption | [`0xcC74129807922abB787363D22955Ec1DebACa822`](https://sepolia.basescan.org/address/0xcC74129807922abB787363D22955Ec1DebACa822) |
+| IdentityRegistry | [`0xF34D21a506777BB65c31955D90940453C990597D`](https://sepolia.basescan.org/address/0xF34D21a506777BB65c31955D90940453C990597D) |
+| AssetRegistry | [`0xCF6B60AD5C71c39270a17953277Da6419Dde4c96`](https://sepolia.basescan.org/address/0xCF6B60AD5C71c39270a17953277Da6419Dde4c96) |
+| PriceOracle | [`0x0c61ecA41912a9B8d805c2AB55fCb5E461861fbF`](https://sepolia.basescan.org/address/0x0c61ecA41912a9B8d805c2AB55fCb5E461861fbF) |
+| RWAToken (ACME) | [`0xb2D5BF6993d78793EFeb875E854602269D84626D`](https://sepolia.basescan.org/address/0xb2D5BF6993d78793EFeb875E854602269D84626D) |
+| Redemption | [`0x5b6A9e4424Ccf10c6420CE9135E6D1e3e43ED250`](https://sepolia.basescan.org/address/0x5b6A9e4424Ccf10c6420CE9135E6D1e3e43ED250) |
 
-Deployed at block **44520778**. Machine-readable addresses and the seeded
+Deployed at block **44641883**. Machine-readable addresses and the seeded
 narrative transactions live in [`deployments/base-sepolia.json`](deployments/base-sepolia.json).
 
 ## The compliance model
@@ -60,27 +60,50 @@ the compliance story:
 
 | Step | Tx | Result |
 |---|---|---|
-| Mint 10,000 ACME to verified Investor A | [`0xe7387c0e…`](https://sepolia.basescan.org/tx/0xe7387c0e5f86684ffa0f0725729f317634ea65789ad458224089d57028f81a05) | success |
-| Investor A → deployer, 1,000 ACME (both verified) | [`0x0990eedd…`](https://sepolia.basescan.org/tx/0x0990eedd081c155d351d5ccf9b3fccf400f97d74c5292dc1b8ca9b404ae18a54) | success |
-| **Investor A → Investor B, 500 ACME (B not verified)** | [`0x034bccd1…`](https://sepolia.basescan.org/tx/0x034bccd19ef3ad82b7fb1dc7e3cfbc23bc9722261b64a4fb72b35255729f2557) | **reverts on-chain — the compliance block** |
-| Investor A redeems 2,000 ACME against asset 0 | [`0x4cb2261d…`](https://sepolia.basescan.org/tx/0x4cb2261d57065794346efcb94b15be6d916ff6807453996791a9d90612a563d4) | success (burned) |
+| Mint 10,000 ACME to verified Investor A | [`0xf17b7c6f…`](https://sepolia.basescan.org/tx/0xf17b7c6f57dc1c595f65b1844c43da5b79e4170ad5d8b82f87299fd008cf8627) | success |
+| Investor A → deployer, 1,000 ACME (both verified) | [`0x895150f4…`](https://sepolia.basescan.org/tx/0x895150f45071d97ede20123e52ada39ed478b37c21e9cda69297c8ddf9302eba) | success |
+| **Investor A → Investor B, 500 ACME (B not verified)** | [`0xf037a788…`](https://sepolia.basescan.org/tx/0xf037a7887d1682821732913194956f805d686f9845deb533f62061a493658ef2) | **reverts on-chain — the compliance block** |
+| Investor A redeems 2,000 ACME against asset 0 | [`0xed22ff33…`](https://sepolia.basescan.org/tx/0xed22ff339d334a865fbfad98c55fc747ddf034a53e72246ac3ab6343306c4460) | success (burned) |
 
 The reverting transfer is the showcase: an ordinary, correctly-formed ERC-20
 transfer that the token itself refuses because the recipient is not KYC-verified.
+
+## v1 deployment (retired 2026-07-26)
+
+Everything above describes the deployment made on **2026-07-26**. An earlier one
+ran from 2026-07-21 and is **retired**: its contracts are still on chain and keep
+their own history, but nothing here reads them and none of the numbers above
+belong to them. They are listed because the honest way to retire a deployment is
+to say where it went, not to delete it.
+
+| Contract | Retired address |
+|---|---|
+| IdentityRegistry | [`0x8FD97Ede1A00a35b2B74F0Ec84221C6791dd9b82`](https://sepolia.basescan.org/address/0x8FD97Ede1A00a35b2B74F0Ec84221C6791dd9b82) |
+| AssetRegistry | [`0x4bB2186DCF0F41F98C1a8D302b35b7c90a44D024`](https://sepolia.basescan.org/address/0x4bB2186DCF0F41F98C1a8D302b35b7c90a44D024) |
+| PriceOracle | [`0x5f307908D306987b0100b71b5de7B071D7b415Aa`](https://sepolia.basescan.org/address/0x5f307908D306987b0100b71b5de7B071D7b415Aa) |
+| RWAToken (ACME) | [`0xf6d3fcecD5aa3AC8Dc77aF05FD4CC021171cCe32`](https://sepolia.basescan.org/address/0xf6d3fcecD5aa3AC8Dc77aF05FD4CC021171cCe32) |
+| Redemption | [`0xcC74129807922abB787363D22955Ec1DebACa822`](https://sepolia.basescan.org/address/0xcC74129807922abB787363D22955Ec1DebACa822) |
+
+Deployed at block 44520778. Its Investor A was
+[`0x1aA17B67…`](https://sepolia.basescan.org/address/0x1aA17B67bE685BaBbe9DfE7abA44940b247756D6)
+and its unverified Investor B
+[`0xaF83046d…`](https://sepolia.basescan.org/address/0xaF83046d1B3FDDCF894E05Bc293E7f9dE26ee3ec).
+The rotation that replaced every key and redeployed from scratch is recorded in
+`pigfox2-repos/KEYS.md`.
 
 ## Cast one-liners
 
 ```bash
 export RPC=https://sepolia.base.org
-export TOKEN=0xf6d3fcecD5aa3AC8Dc77aF05FD4CC021171cCe32
-export IDREG=0x8FD97Ede1A00a35b2B74F0Ec84221C6791dd9b82
-export ASSETS=0x4bB2186DCF0F41F98C1a8D302b35b7c90a44D024
-export ORACLE=0x5f307908D306987b0100b71b5de7B071D7b415Aa
-export REDEEM=0xcC74129807922abB787363D22955Ec1DebACa822
+export TOKEN=0xb2D5BF6993d78793EFeb875E854602269D84626D
+export IDREG=0xF34D21a506777BB65c31955D90940453C990597D
+export ASSETS=0xCF6B60AD5C71c39270a17953277Da6419Dde4c96
+export ORACLE=0x0c61ecA41912a9B8d805c2AB55fCb5E461861fbF
+export REDEEM=0x5b6A9e4424Ccf10c6420CE9135E6D1e3e43ED250
 
 # Token facts
 cast call $TOKEN 'totalSupply()(uint256)'    --rpc-url $RPC
-cast call $TOKEN 'balanceOf(address)(uint256)' 0x1aA17B67bE685BaBbe9DfE7abA44940b247756D6 --rpc-url $RPC
+cast call $TOKEN 'balanceOf(address)(uint256)' 0xe2DA56b0f99bAfBC6c8E2c92f647F1F5ffBcc03E --rpc-url $RPC
 
 # Is an address KYC-verified?
 cast call $IDREG 'isVerified(address)(bool)' <addr> --rpc-url $RPC
