@@ -29,11 +29,12 @@ else
 	die "No .env found."
 fi
 
-: "${RWA_INVESTOR_A_PK:?RWA_INVESTOR_A_PK required}"
-: "${RWA_INVESTOR_A_ADDR:?RWA_INVESTOR_A_ADDR required}"
-: "${RWA_INVESTOR_B_ADDR:?RWA_INVESTOR_B_ADDR required}"
-: "${ADDRESS:?ADDRESS (deployer) required}"
-RPC="${RPC_URL:-https://sepolia.base.org}"
+: "${DEMO_INVESTOR_A_PK:?DEMO_INVESTOR_A_PK required}"
+: "${DEMO_INVESTOR_A_ADDR:?DEMO_INVESTOR_A_ADDR required}"
+: "${DEMO_INVESTOR_B_ADDR:?DEMO_INVESTOR_B_ADDR required}"
+: "${DEMO_DEPLOYER_ADDR:?DEMO_DEPLOYER_ADDR (deployer) required}"
+# DEMO_RPC_URL wins when set — see the note in scripts/deploy.sh.
+RPC="${DEMO_RPC_URL:-${RPC_URL:-https://sepolia.base.org}}"
 
 D=deployments/base-sepolia.json
 TOKEN="$(python3 -c "import json;print(json.load(open('$D'))['contracts']['RWAToken'])")"
@@ -48,24 +49,24 @@ TWO_K=2000000000000000000000  # 2,000e18
 export NODE_OPTIONS=--dns-result-order=ipv4first
 
 # --- read-verify ---
-[ "$(cast call "$IDREG" 'isVerified(address)(bool)' "$RWA_INVESTOR_A_ADDR" --rpc-url "$RPC")" = "true" ] ||
+[ "$(cast call "$IDREG" 'isVerified(address)(bool)' "$DEMO_INVESTOR_A_ADDR" --rpc-url "$RPC")" = "true" ] ||
 	die "Investor A is not verified; deploy/seed did not run."
-[ "$(cast call "$IDREG" 'isVerified(address)(bool)' "$RWA_INVESTOR_B_ADDR" --rpc-url "$RPC")" = "false" ] ||
+[ "$(cast call "$IDREG" 'isVerified(address)(bool)' "$DEMO_INVESTOR_B_ADDR" --rpc-url "$RPC")" = "false" ] ||
 	die "Investor B is verified — the revert demo would not revert."
 [ "$(cast call "$ASSETS" 'isActive(uint256)(bool)' 0 --rpc-url "$RPC")" = "true" ] ||
 	die "Asset 0 is not active."
 
 log "Investor A -> deployer, 1,000 ACME (expect success)..."
-cast send "$TOKEN" 'transfer(address,uint256)' "$ADDRESS" "$ONE_K" \
-	--private-key "$RWA_INVESTOR_A_PK" --rpc-url "$RPC" >/dev/null
+cast send "$TOKEN" 'transfer(address,uint256)' "$DEMO_DEPLOYER_ADDR" "$ONE_K" \
+	--private-key "$DEMO_INVESTOR_A_PK" --rpc-url "$RPC" >/dev/null
 log "  done."
 
 log "Investor A -> Investor B, 500 ACME (expect ON-CHAIN REVERT; forced past gas estimation)..."
-cast send "$TOKEN" 'transfer(address,uint256)' "$RWA_INVESTOR_B_ADDR" "$HALF_K" \
-	--private-key "$RWA_INVESTOR_A_PK" --rpc-url "$RPC" --gas-limit 120000 >/dev/null 2>&1 ||
+cast send "$TOKEN" 'transfer(address,uint256)' "$DEMO_INVESTOR_B_ADDR" "$HALF_K" \
+	--private-key "$DEMO_INVESTOR_A_PK" --rpc-url "$RPC" --gas-limit 120000 >/dev/null 2>&1 ||
 	log "  reverted as intended (recipient not KYC-verified)."
 
 log "Investor A redeems 2,000 ACME against asset 0 (expect success)..."
 cast send "$REDEEM" 'requestRedemption(uint256,uint256)' 0 "$TWO_K" \
-	--private-key "$RWA_INVESTOR_A_PK" --rpc-url "$RPC" >/dev/null
+	--private-key "$DEMO_INVESTOR_A_PK" --rpc-url "$RPC" >/dev/null
 log "  done. Narrative seed complete."

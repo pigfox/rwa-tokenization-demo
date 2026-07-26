@@ -1,20 +1,20 @@
 {
   "network": "base-sepolia",
   "chainId": 84532,
-  "deployBlock": 44520778,
+  "deployBlock": 44641883,
   "explorer": "https://sepolia.basescan.org",
-  "deployer": "0x49FE3B2731090b93d297D259BD1eFFC5DB015edF",
+  "deployer": "0xb6c3a56CA2f99e3F5d7d16ad968df9f71cCC184D",
   "contracts": {
-    "IdentityRegistry": "0x8FD97Ede1A00a35b2B74F0Ec84221C6791dd9b82",
-    "AssetRegistry": "0x4bB2186DCF0F41F98C1a8D302b35b7c90a44D024",
-    "PriceOracle": "0x5f307908D306987b0100b71b5de7B071D7b415Aa",
-    "RWAToken": "0xf6d3fcecD5aa3AC8Dc77aF05FD4CC021171cCe32",
-    "Redemption": "0xcC74129807922abB787363D22955Ec1DebACa822"
+    "IdentityRegistry": "0xF34D21a506777BB65c31955D90940453C990597D",
+    "AssetRegistry": "0xCF6B60AD5C71c39270a17953277Da6419Dde4c96",
+    "PriceOracle": "0x0c61ecA41912a9B8d805c2AB55fCb5E461861fbF",
+    "RWAToken": "0xb2D5BF6993d78793EFeb875E854602269D84626D",
+    "Redemption": "0x5b6A9e4424Ccf10c6420CE9135E6D1e3e43ED250"
   },
   "parties": {
-    "deployer": "0x49FE3B2731090b93d297D259BD1eFFC5DB015edF",
-    "investorA": "0x1aA17B67bE685BaBbe9DfE7abA44940b247756D6",
-    "investorB": "0xaF83046d1B3FDDCF894E05Bc293E7f9dE26ee3ec"
+    "deployer": "0xb6c3a56CA2f99e3F5d7d16ad968df9f71cCC184D",
+    "investorA": "0xe2DA56b0f99bAfBC6c8E2c92f647F1F5ffBcc03E",
+    "investorB": "0xfEe552A091c20B9aeC72dC681b0D3Da750C46eEb"
   },
   "token": {
     "name": "Acme Tower Fractions",
@@ -28,22 +28,22 @@
   },
   "narrativeTx": {
     "mintToInvestorA": {
-      "hash": "0xe7387c0e5f86684ffa0f0725729f317634ea65789ad458224089d57028f81a05",
+      "hash": "0xf17b7c6f57dc1c595f65b1844c43da5b79e4170ad5d8b82f87299fd008cf8627",
       "note": "Mint 10,000 ACME to KYC-verified Investor A",
       "status": "success"
     },
     "transferInvestorAToDeployer": {
-      "hash": "0x0990eedd081c155d351d5ccf9b3fccf400f97d74c5292dc1b8ca9b404ae18a54",
+      "hash": "0x895150f45071d97ede20123e52ada39ed478b37c21e9cda69297c8ddf9302eba",
       "note": "Investor A -> deployer, 1,000 ACME: both parties verified",
       "status": "success"
     },
     "transferInvestorAToInvestorB": {
-      "hash": "0x034bccd19ef3ad82b7fb1dc7e3cfbc23bc9722261b64a4fb72b35255729f2557",
-      "note": "Investor A -> Investor B, 500 ACME: REVERTS, recipient not KYC-verified (SenderNotVerified/RecipientNotVerified hook). The showcase compliance-block.",
+      "hash": "0xf037a7887d1682821732913194956f805d686f9845deb533f62061a493658ef2",
+      "note": "Investor A -> Investor B, 500 ACME: REVERTS, recipient not KYC-verified (RecipientNotVerified hook). The showcase compliance-block.",
       "status": "reverted"
     },
     "redemptionByInvestorA": {
-      "hash": "0x4cb2261d57065794346efcb94b15be6d916ff6807453996791a9d90612a563d4",
+      "hash": "0xed22ff339d334a865fbfad98c55fc747ddf034a53e72246ac3ab6343306c4460",
       "note": "Investor A redeems 2,000 ACME against asset 0 (burned); request id 0 recorded, pending settlement",
       "status": "success"
     }

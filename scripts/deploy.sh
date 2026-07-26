@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Deploy + seed the RWA stack on Base Sepolia. Sources .env (secrets stay off the
-# command line), verifies the chain and that PRIVATE_KEY derives to ADDRESS
+# command line), verifies the chain and that DEMO_DEPLOYER_PK derives to DEMO_DEPLOYER_ADDR
 # before spending gas, then broadcasts the deploy script and (if a Basescan key
 # is present) verifies the source.
 set -euo pipefail
@@ -31,21 +31,23 @@ else
 	exit 0
 fi
 
-: "${PRIVATE_KEY:?PRIVATE_KEY is required}"
-: "${ADDRESS:?ADDRESS is required}"
-: "${RWA_INVESTOR_A_ADDR:?RWA_INVESTOR_A_ADDR is required}"
-RPC="${RPC_URL:-https://sepolia.base.org}"
+: "${DEMO_DEPLOYER_PK:?DEMO_DEPLOYER_PK is required}"
+: "${DEMO_DEPLOYER_ADDR:?DEMO_DEPLOYER_ADDR is required}"
+: "${DEMO_INVESTOR_A_ADDR:?DEMO_INVESTOR_A_ADDR is required}"
+# DEMO_RPC_URL wins when set — sepolia.base.org rate-limits a host that has been
+# running the chain suites and then fails as a bare "fetch failed", not a 429.
+RPC="${DEMO_RPC_URL:-${RPC_URL:-https://sepolia.base.org}}"
 
 # Verify the RPC really is Base Sepolia (belt-and-braces with the in-script guard).
 chain_id="$(cast chain-id --rpc-url "$RPC")"
 [ "$chain_id" = "84532" ] || die "RPC chain id is $chain_id, expected 84532 (Base Sepolia)"
 
 # Verify the key derives to the expected address without ever printing the key.
-derived="$(cast wallet address --private-key "$PRIVATE_KEY")"
-[ "${derived,,}" = "${ADDRESS,,}" ] || die "PRIVATE_KEY derives to $derived, not ADDRESS ($ADDRESS)"
+derived="$(cast wallet address --private-key "$DEMO_DEPLOYER_PK")"
+[ "${derived,,}" = "${DEMO_DEPLOYER_ADDR,,}" ] || die "DEMO_DEPLOYER_PK derives to $derived, not DEMO_DEPLOYER_ADDR ($DEMO_DEPLOYER_ADDR)"
 
-bal="$(cast balance "$ADDRESS" --rpc-url "$RPC" --ether)"
-log "Deployer $ADDRESS balance: $bal ETH"
+bal="$(cast balance "$DEMO_DEPLOYER_ADDR" --rpc-url "$RPC" --ether)"
+log "Deployer $DEMO_DEPLOYER_ADDR balance: $bal ETH"
 
 verify_args=()
 if [ -n "${ETHERSCAN_API_KEY:-}" ]; then

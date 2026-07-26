@@ -13,8 +13,8 @@ import {Redemption} from "../src/Redemption.sol";
 ///         seeds the compliant on-chain state the demo page reads: whitelists
 ///         the deployer and Investor A, registers a batch of backing assets,
 ///         pushes an oracle price, and mints fractions to Investor A.
-/// @dev Reads the deployer key from `PRIVATE_KEY` (env, never argv) and Investor
-///      A's address from `RWA_INVESTOR_A_ADDR`. Refuses to run on any chain but
+/// @dev Reads the deployer key from `DEMO_DEPLOYER_PK` (env, never argv) and
+///      Investor A's address from `DEMO_INVESTOR_A_ADDR`. Refuses to run on any chain but
 ///      Base Sepolia. The Investor-A-signed narrative txs (a successful
 ///      transfer, the reverting transfer to the un-whitelisted Investor B, and a
 ///      redemption) are executed afterward by scripts/seed-investor.sh, which
@@ -35,9 +35,11 @@ contract Deploy is Script {
             revert WrongChain(BASE_SEPOLIA_CHAIN_ID, block.chainid);
         }
 
-        uint256 deployerKey = vm.envUint("PRIVATE_KEY");
+        // Unified role keys, shared by all three demo repos. See
+        // pigfox2-repos/KEYS.md for the addresses and what each role may do.
+        uint256 deployerKey = vm.envUint("DEMO_DEPLOYER_PK");
         address deployer = vm.addr(deployerKey);
-        address investorA = vm.envAddress("RWA_INVESTOR_A_ADDR");
+        address investorA = vm.envAddress("DEMO_INVESTOR_A_ADDR");
 
         vm.startBroadcast(deployerKey);
 
