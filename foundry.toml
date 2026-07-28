@@ -6,19 +6,27 @@ solc = "0.8.28"
 optimizer = true
 optimizer_runs = 200
 
-# crytic-compile (Echidna, Slither) consumes these Foundry artifacts directly via
+# crytic-compile (Echidna, Medusa, Slither) consumes these Foundry artifacts via
 # --foundry-ignore-compile, so the fuzzer/analyzer never needs its own solc download.
 build_info = true
 extra_output = ["storageLayout"]
 
-remappings = ["forge-std/=lib/forge-std/src/"]
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    # PIGFOX SOLIDITY PIPELINE v1, vendored as a submodule. The shared property
+    # base lives here; the gate scripts alongside it are what CI runs, so a local
+    # run and a CI run are the same bytes.
+    "pipeline/=lib/solidity-pipeline/src/",
+]
 
 [profile.default.fuzz]
 runs = 512
 
 [profile.default.invariant]
 runs = 256
-depth = 64          # intentionally == echidna.yaml seqLen
+# depth intentionally matches seqLen in echidna.yaml and callSequenceLength in
+# medusa.json, so all three engines walk sequences of the same length.
+depth = 64
 fail_on_revert = true
 
 [profile.ci.fuzz]

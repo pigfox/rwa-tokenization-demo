@@ -1,8 +1,8 @@
-name: ci
+name: CI
 
 # Everything here runs on a clean checkout with NO secrets. Build, test,
-# coverage, static analysis, and property fuzzing need no keys — only deploying
-# (done manually from a laptop) does, and that never happens in CI.
+# coverage, static analysis and property fuzzing need no keys — only deploying
+# does, and that is done by hand from a laptop, never here.
 on:
   push:
     branches: [main]
@@ -13,108 +13,27 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  FOUNDRY_PROFILE: ci
-  EXPECTED_PROPERTIES: 3
-
 jobs:
-  # Enforces the DIRECT-CHAIN DOCTRINE mechanically: nothing in this repo may
-  # point the EVM at a copy of a remote chain's state. The gate self-tests by
-  # planting a token, so a scan that has silently stopped matching fails the job
-  # instead of reporting the same green as a clean tree.
+  # PIGFOX SOLIDITY PIPELINE v1 — the estate's one verification standard, defined
+  # once in pigfox/solidity-pipeline and consumed here rather than copied. This
+  # file used to carry five hand-written jobs, and the repo carried its own
+  # Slither config and its own coverage script; all of that now lives in one
+  # place, so a fix lands once. Medusa is new here — this repo had Echidna only.
   #
-  # fetch-depth: 0 is required — the gate uses `git grep` over tracked files.
-  no-chain-copy:
-    name: no-chain-copy (doctrine gate)
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4.2.2
-        with:
-          fetch-depth: 0
-      - name: Chain-copy token gate (scan + self-test)
-        run: ./scripts/no-chain-copy-gate.sh
-
-  fmt:
-    name: format
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4.2.2
-        with:
-          submodules: recursive
-      - uses: foundry-rs/foundry-toolchain@v1.3.1
-        with:
-          version: v1.4.2
-      - name: forge fmt --check
-        run: forge fmt --check
-
-  forge:
-    name: build + test + coverage
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4.2.2
-        with:
-          submodules: recursive
-      - uses: foundry-rs/foundry-toolchain@v1.3.1
-        with:
-          version: stable
-      - name: forge build
-        run: forge build --sizes
-      - name: forge test
-        run: forge test -vvv
-      - name: coverage gate (100% of src/)
-        run: ./scripts/coverage.sh
-      - uses: actions/upload-artifact@v4.4.3
-        if: always()
-        with:
-          name: coverage-summary
-          path: coverage-summary.txt
-
-  slither:
-    name: slither
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4.2.2
-        with:
-          submodules: recursive
-      - uses: foundry-rs/foundry-toolchain@v1.3.1
-        with:
-          version: stable
-      - name: forge build
-        run: forge build
-      - uses: crytic/slither-action@v0.4.0
-        with:
-          slither-config: slither.config.json
-          slither-args: --ignore-compile
-          fail-on: low
-
-  echidna:
-    name: echidna
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4.2.2
-        with:
-          submodules: recursive
-      - uses: foundry-rs/foundry-toolchain@v1.3.1
-        with:
-          version: stable
-      - name: install crytic-compile + slither
-        run: pipx install crytic-compile && pipx install slither-analyzer
-      - name: install echidna
-        run: |
-          curl -fsSL -o echidna.tar.gz https://github.com/crytic/echidna/releases/download/v2.2.6/echidna-2.2.6-x86_64-linux.tar.gz
-          tar -xzf echidna.tar.gz
-          sudo mv echidna /usr/local/bin/
-      - name: fresh build for crytic
-        run: rm -rf crytic-export && forge build --force
-      - name: run echidna
-        run: |
-          out=$(echidna . --contract Properties --config echidna.yaml 2>&1)
-          echo "$out"
-          passing=$(echo "$out" | grep -c ': passing')
-          if [ "$passing" -ne "$EXPECTED_PROPERTIES" ]; then
-            echo "expected $EXPECTED_PROPERTIES passing properties, got $passing" >&2
-            exit 1
-          fi
+  # The gate SCRIPTS come from lib/solidity-pipeline, vendored as a submodule at a
+  # commit this repo pins, so a local run and this run are the same bytes.
+  #
+  # https://github.com/pigfox/solidity-pipeline
+  pipeline:
+    uses: pigfox/solidity-pipeline/.github/workflows/solidity.yml@v1
+    with:
+      # test/Properties.sol declares six echidna_* predicates and states the same
+      # number in pigfoxPropertyCount(). Both fuzzers assert they registered
+      # exactly this many, so a property that silently stops being picked up fails
+      # the job instead of reporting a smaller green run.
+      #
+      # Bump this, pigfoxPropertyCount() and the predicate together, in one commit.
+      expected-properties: 6

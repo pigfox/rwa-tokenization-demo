@@ -120,17 +120,48 @@ cast call $REDEEM 'getRequest(uint256)((address,uint256,uint256,bool,bool))' 0 -
 
 ## Testing
 
+Verified by the
+[**PIGFOX SOLIDITY PIPELINE v1**](https://github.com/pigfox/solidity-pipeline) —
+the estate's single definition of green, consumed rather than copied. Every stage
+runs on every push.
+
 | Gate | Command | Result |
 |---|---|---|
-| Unit + fuzz + invariant | `forge test` | 83 tests; 3 invariants at 16,384 calls each, 0 reverts |
-| Coverage | `./scripts/coverage.sh` | 100% lines / statements / branches / functions across all six `src/` files |
-| Static analysis | `slither . --config-file slither.config.json` | 0 results at `fail_on: low` |
-| Property fuzzing | `echidna . --contract Properties --config echidna.yaml` | 3 properties passing over 100,000 calls |
+| Unit + fuzz + invariant | `forge test` | **90 tests**, 7 suites; 6 invariants at 16,384 calls each, 0 reverts |
+| Coverage | `lib/solidity-pipeline/scripts/coverage.sh` | **100%** lines / statements / branches / functions across all six `src/` files, no exclusions |
+| Static analysis | `slither . --config-file lib/solidity-pipeline/slither.config.json --ignore-compile --fail-low` | 0 results at `fail_on: low` |
+| Property fuzzing (Echidna) | `echidna . --contract Properties --config echidna.yaml` | **6/6** properties over 100,000 calls |
+| Property fuzzing (Medusa) | `medusa fuzz --config medusa.json` | **6/6** properties over 100,000 calls |
+| Doctrine gate | `lib/solidity-pipeline/scripts/no-chain-copy-gate.sh all` | direct-chain only; scan plus self-test |
 
-A single harness, `test/Properties.sol`, is driven by both Foundry's invariant
-runner and Echidna. The three properties: supply equals the sum of balances, a
-never-verified address never holds a balance, and the oracle stamp is monotonic.
-Slither's four excluded detectors are individually justified in
+A single harness, `test/Properties.sol`, is driven by **all three** engines —
+Foundry's invariant runner, Echidna and Medusa — so a property cannot hold under
+one and quietly rot under another. Both fuzzers additionally assert the *number*
+of properties they registered, so a predicate that silently stops being picked up
+fails the build instead of reporting a smaller green run.
+
+The six properties:
+
+1. `echidna_supply_equals_sum_of_balances` — supply equals the sum of balances
+2. `echidna_unverified_never_holds` — a never-verified address never holds a balance
+3. `echidna_oracle_stamp_monotonic` — the oracle stamp never moves backwards
+4. `echidna_supply_conserved` — everything minted, minus everything burned, is the supply
+5. `echidna_redemption_ledger_consistent` — the redemption ledger is gapless and
+   sequential, records exactly what was asked of it, and never settles twice
+6. `echidna_redemption_requires_active_asset` — value is only ever destroyed
+   against an asset the registrar has marked Active
+
+Properties 4–6 and the harness's `Redemption` and `AssetRegistry` coverage are
+new. The earlier harness fuzzed the token, the identity registry and the oracle,
+and left the redemption ledger — the part of this system that destroys value —
+with no invariant on it at all. Four `Actor` contracts now stand in for holders,
+because `requestRedemption` records `msg.sender` and neither fuzzer has
+cheatcodes; without them every redemption in a campaign would be the harness
+redeeming from itself.
+
+Slither's excluded detectors are justified in the shared
+[pipeline exclusions doc](https://github.com/pigfox/solidity-pipeline/blob/main/docs/slither-exclusions.md);
+findings this repo *fixed* rather than excluded are recorded in
 [`docs/slither-exclusions.md`](docs/slither-exclusions.md).
 
 ## Setup
@@ -142,9 +173,10 @@ these values**; they are needed only to deploy and to seed. No key is ever place
 on a server or in CI.
 
 ```bash
+git submodule update --init --recursive   # brings in lib/solidity-pipeline
 forge build
 forge test
-./scripts/coverage.sh          # 100% src/ gate
+lib/solidity-pipeline/scripts/coverage.sh   # 100% src/ gate
 ./scripts/deploy.sh            # deploy + seed to Base Sepolia (needs .env)
 ./scripts/seed-investor.sh     # the Investor-A-signed narrative txs
 ```
@@ -156,11 +188,13 @@ src/                    Solidity contracts (Roles + the five system contracts)
   interfaces/           minimal interfaces the siblings depend on
 test/                   unit + fuzz tests, Properties harness, Invariants runner
 script/Deploy.s.sol     chain-id-guarded deploy + seed (deployer key)
-scripts/                bash: deploy.sh, seed-investor.sh, coverage.sh
+scripts/                bash: deploy.sh, seed-investor.sh
+lib/solidity-pipeline/  PIGFOX SOLIDITY PIPELINE v1 (submodule): gate scripts,
+                        shared Slither config, shared property base
 deployments/            committed record of addresses + narrative txs
-docs/                   slither-exclusions.md
-echidna.yaml            property-fuzzing config
-slither.config.json     static-analysis config (fail_on: low)
+docs/                   slither-exclusions.md (what was FIXED, not excluded)
+echidna.yaml            Echidna config
+medusa.json             Medusa config — same Properties.sol, second engine
 ```
 
 ## Licence

@@ -12,9 +12,14 @@ coverage-summary.txt
 # deployments/base-sepolia.json + the README instead of committing this.
 broadcast/
 
-# Echidna fuzzing corpus / crytic exports
+# Property-fuzzing working state. The CORPORA are regenerable and machine-local;
+# committing them would let a stale corpus decide what a fresh run explores. The
+# engine transcripts are inputs to the property-count gate, not artifacts.
 echidna-corpus/
+medusa-corpus/
 crytic-export/
+echidna-output.txt
+medusa-output.txt
 slither_results.json
 
 # Node (only present if a helper toolchain is added later)
