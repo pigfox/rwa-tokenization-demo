@@ -1,5 +1,7 @@
 # rwa-tokenization-demo
 
+[![CI](https://github.com/pigfox/rwa-tokenization-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/pigfox/rwa-tokenization-demo/actions/workflows/ci.yml)
+
 Real-world asset tokenization with KYC-gated transfers on Base Sepolia.
 
 A minimal, ERC-3643-inspired stack for fractionalizing a real-world asset as a
