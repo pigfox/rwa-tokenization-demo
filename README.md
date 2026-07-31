@@ -20,13 +20,13 @@ Chain id `84532`. All five contracts are source-verified on Basescan.
 
 | Contract | Address |
 |---|---|
-| IdentityRegistry | [`0xF34D21a506777BB65c31955D90940453C990597D`](https://sepolia.basescan.org/address/0xF34D21a506777BB65c31955D90940453C990597D) |
-| AssetRegistry | [`0xCF6B60AD5C71c39270a17953277Da6419Dde4c96`](https://sepolia.basescan.org/address/0xCF6B60AD5C71c39270a17953277Da6419Dde4c96) |
-| PriceOracle | [`0x0c61ecA41912a9B8d805c2AB55fCb5E461861fbF`](https://sepolia.basescan.org/address/0x0c61ecA41912a9B8d805c2AB55fCb5E461861fbF) |
-| RWAToken (ACME) | [`0xb2D5BF6993d78793EFeb875E854602269D84626D`](https://sepolia.basescan.org/address/0xb2D5BF6993d78793EFeb875E854602269D84626D) |
-| Redemption | [`0x5b6A9e4424Ccf10c6420CE9135E6D1e3e43ED250`](https://sepolia.basescan.org/address/0x5b6A9e4424Ccf10c6420CE9135E6D1e3e43ED250) |
+| IdentityRegistry | [`0x11078533fb01015e52b1eaCD90d7BaE90B29f109`](https://sepolia.basescan.org/address/0x11078533fb01015e52b1eaCD90d7BaE90B29f109) |
+| AssetRegistry | [`0x354718130d926f7cA148dc4935A7d946d4EA0c62`](https://sepolia.basescan.org/address/0x354718130d926f7cA148dc4935A7d946d4EA0c62) |
+| PriceOracle | [`0xc787B126Dd60311eECf9501aFC3d7AdC2F348bBf`](https://sepolia.basescan.org/address/0xc787B126Dd60311eECf9501aFC3d7AdC2F348bBf) |
+| RWAToken (ACME) | [`0xc01B935b7D62904E18C14f041E2611B582d1bf93`](https://sepolia.basescan.org/address/0xc01B935b7D62904E18C14f041E2611B582d1bf93) |
+| Redemption | [`0xE41053aE6038E404dA764F96796288f9990Fe881`](https://sepolia.basescan.org/address/0xE41053aE6038E404dA764F96796288f9990Fe881) |
 
-Deployed at block **44641883**. Machine-readable addresses and the seeded
+Deployed at block **44880606**. Machine-readable addresses and the seeded
 narrative transactions live in [`deployments/base-sepolia.json`](deployments/base-sepolia.json).
 
 ## The compliance model
@@ -62,10 +62,10 @@ the compliance story:
 
 | Step | Tx | Result |
 |---|---|---|
-| Mint 10,000 ACME to verified Investor A | [`0xf17b7c6f…`](https://sepolia.basescan.org/tx/0xf17b7c6f57dc1c595f65b1844c43da5b79e4170ad5d8b82f87299fd008cf8627) | success |
-| Investor A → deployer, 1,000 ACME (both verified) | [`0x895150f4…`](https://sepolia.basescan.org/tx/0x895150f45071d97ede20123e52ada39ed478b37c21e9cda69297c8ddf9302eba) | success |
-| **Investor A → Investor B, 500 ACME (B not verified)** | [`0xf037a788…`](https://sepolia.basescan.org/tx/0xf037a7887d1682821732913194956f805d686f9845deb533f62061a493658ef2) | **reverts on-chain — the compliance block** |
-| Investor A redeems 2,000 ACME against asset 0 | [`0xed22ff33…`](https://sepolia.basescan.org/tx/0xed22ff339d334a865fbfad98c55fc747ddf034a53e72246ac3ab6343306c4460) | success (burned) |
+| Mint 10,000 ACME to verified Investor A | [`0x88f95a92…`](https://sepolia.basescan.org/tx/0x88f95a926e87133470961d28fb520b4397e1c307acfeed96b987dabd7c657e45) | success |
+| Investor A → deployer, 1,000 ACME (both verified) | [`0xa412731e…`](https://sepolia.basescan.org/tx/0xa412731e07de33ae42c1374f2ee1b35980994398a4afe8ae557a354f074e646d) | success |
+| **Investor A → Investor B, 500 ACME (B not verified)** | [`0x25ec03b4…`](https://sepolia.basescan.org/tx/0x25ec03b4a75f9044d32486898092135862fd02925e814e2f291cd948f97791bc) | **reverts on-chain — the compliance block** |
+| Investor A redeems 2,000 ACME against asset 0 | [`0xf037dddf…`](https://sepolia.basescan.org/tx/0xf037dddfee855d94191e878a2f02d3ad3e329e772608f41cc7667c57ac678878) | success (burned) |
 
 The reverting transfer is the showcase: an ordinary, correctly-formed ERC-20
 transfer that the token itself refuses because the recipient is not KYC-verified.
@@ -97,11 +97,11 @@ The rotation that replaced every key and redeployed from scratch is recorded in
 
 ```bash
 export RPC=https://sepolia.base.org
-export TOKEN=0xb2D5BF6993d78793EFeb875E854602269D84626D
-export IDREG=0xF34D21a506777BB65c31955D90940453C990597D
-export ASSETS=0xCF6B60AD5C71c39270a17953277Da6419Dde4c96
-export ORACLE=0x0c61ecA41912a9B8d805c2AB55fCb5E461861fbF
-export REDEEM=0x5b6A9e4424Ccf10c6420CE9135E6D1e3e43ED250
+export TOKEN=0xc01B935b7D62904E18C14f041E2611B582d1bf93
+export IDREG=0x11078533fb01015e52b1eaCD90d7BaE90B29f109
+export ASSETS=0x354718130d926f7cA148dc4935A7d946d4EA0c62
+export ORACLE=0xc787B126Dd60311eECf9501aFC3d7AdC2F348bBf
+export REDEEM=0xE41053aE6038E404dA764F96796288f9990Fe881
 
 # Token facts
 cast call $TOKEN 'totalSupply()(uint256)'    --rpc-url $RPC
