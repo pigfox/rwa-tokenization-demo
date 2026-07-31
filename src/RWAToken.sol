@@ -35,10 +35,19 @@ contract RWAToken is Roles, IRWAToken {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice ERC-20 transfer event (mint = from zero, burn = to zero).
+    /// @param from The sender; zero when the transfer is a mint.
+    /// @param to The recipient; zero when the transfer is a burn.
+    /// @param value The amount moved. NOT indexed, because ERC-20 fixes this signature —
+    ///        indexing it would change the topic layout and break every standard consumer.
     event Transfer(address indexed from, address indexed to, uint256 value);
     /// @notice ERC-20 approval event.
+    /// @param owner The account whose tokens may now be pulled.
+    /// @param spender The account permitted to pull them.
+    /// @param value The new allowance, which replaces any previous one rather than adding to it.
     event Approval(address indexed owner, address indexed spender, uint256 value);
     /// @notice Emitted when the redeemer (the Redemption contract) is configured.
+    /// @param redeemer The only address that may call `burnFrom`. Re-emitted on every
+    ///        change, so the log shows which contract held burn authority at any block.
     event RedeemerSet(address indexed redeemer);
 
     /*//////////////////////////////////////////////////////////////
@@ -66,6 +75,10 @@ contract RWAToken is Roles, IRWAToken {
     /// @notice The Redemption contract permitted to burn tokens. Zero until set.
     address public redeemer;
 
+    /// @notice Binds the token to its KYC whitelist and sets the deployer as owner.
+    /// @dev `identityRegistry_` is stored as an `immutable`: the compliance gate holders
+    ///      are judged against is fixed for the life of the token, so it cannot be swapped
+    ///      for a permissive one after balances exist.
     /// @param name_ ERC-20 name.
     /// @param symbol_ ERC-20 symbol.
     /// @param identityRegistry_ The KYC whitelist address (non-zero).
@@ -84,11 +97,18 @@ contract RWAToken is Roles, IRWAToken {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice The token balance of `account`.
+    /// @param account The address to read.
+    /// @return The balance. Unaffected by verification status: losing verification blocks
+    ///         future movement, it never confiscates a balance.
     function balanceOf(address account) external view override returns (uint256) {
         return _balances[account];
     }
 
     /// @notice The remaining tokens `spender` may pull from `holder`.
+    /// @param holder The account whose tokens would be pulled.
+    /// @param spender The account permitted to pull them.
+    /// @return The remaining allowance. An allowance is not a promise the transfer will
+    ///         succeed — both parties must still be verified when it is spent.
     function allowance(address holder, address spender) external view returns (uint256) {
         return _allowances[holder][spender];
     }
@@ -98,6 +118,10 @@ contract RWAToken is Roles, IRWAToken {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Configure the redeemer (the Redemption contract) permitted to burn.
+    /// @param redeemer_ The address granted burn authority. Rejected if zero. Owner-only
+    ///        and deliberately re-settable, unlike the identity registry: the redemption
+    ///        contract is replaceable operational wiring, whereas the compliance gate is
+    ///        the token's guarantee and is fixed at construction.
     function setRedeemer(address redeemer_) external onlyOwner {
         if (redeemer_ == address(0)) revert ZeroAddress();
         redeemer = redeemer_;
@@ -109,6 +133,9 @@ contract RWAToken is Roles, IRWAToken {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Mint `amount` tokens to `to`. The recipient must be KYC-verified.
+    /// @param to The recipient. Must be whitelisted at this moment, checked against the
+    ///        registry rather than any cached list.
+    /// @param amount The quantity to create, added to `totalSupply`.
     function mint(address to, uint256 amount) external onlyAgent {
         if (to == address(0)) revert ZeroAddress();
         if (!identityRegistry.isVerified(to)) revert RecipientNotVerified(to);
@@ -122,6 +149,9 @@ contract RWAToken is Roles, IRWAToken {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Approve `spender` to pull up to `amount` of the caller's tokens.
+    /// @param spender The account permitted to pull. Rejected if zero.
+    /// @param amount The new allowance, replacing any previous value outright.
+    /// @return Always true. The bool exists because ERC-20 specifies it; failures revert.
     function approve(address spender, uint256 amount) external returns (bool) {
         if (spender == address(0)) revert ZeroAddress();
         _allowances[msg.sender][spender] = amount;
@@ -130,6 +160,11 @@ contract RWAToken is Roles, IRWAToken {
     }
 
     /// @notice Transfer `amount` tokens to `to`. Both parties must be verified.
+    /// @param to The recipient, which must be whitelisted at this moment.
+    /// @param amount The quantity to move.
+    /// @return Always true; a non-compliant or underfunded transfer reverts rather than
+    ///         returning false, so a caller cannot mistake refusal for success. This
+    ///         reverting transfer is the demo's compliance showcase.
     function transfer(address to, uint256 amount) external returns (bool) {
         _transfer(msg.sender, to, amount);
         return true;
@@ -137,6 +172,11 @@ contract RWAToken is Roles, IRWAToken {
 
     /// @notice Transfer `amount` from `from` to `to` using the caller's allowance.
     ///         Both `from` and `to` must be verified.
+    /// @param from The account whose tokens move; its verification is re-checked here, so
+    ///        an allowance granted while verified is unusable once it is removed.
+    /// @param to The recipient, which must also be verified.
+    /// @param amount The quantity to move, also deducted from the caller's allowance.
+    /// @return Always true; refusals revert.
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
         _spendAllowance(from, msg.sender, amount);
         _transfer(from, to, amount);
@@ -150,6 +190,10 @@ contract RWAToken is Roles, IRWAToken {
     /// @notice Burn `amount` tokens held by `from`. Restricted to the redeemer.
     /// @dev Exempt from the verification hooks: a burn only reduces a balance and
     ///      can never create a holding for a non-verified address.
+    /// @param from The holder whose tokens are destroyed. Deliberately NOT required to be
+    ///        verified: a holder who lost verification must still be able to redeem out,
+    ///        and blocking that would strand their tokens permanently.
+    /// @param amount The quantity to burn, also deducted from `totalSupply`.
     function burnFrom(address from, uint256 amount) external override {
         if (msg.sender != redeemer) revert NotRedeemer(msg.sender);
         uint256 bal = _balances[from];
