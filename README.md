@@ -129,12 +129,20 @@ runs on every push.
 
 | Gate | Command | Result |
 |---|---|---|
+| Lint — step 1 | `lib/solidity-pipeline/scripts/lint-config-check.sh all`, then `forge lint` (bare) and `npx --yes solhint@6.2.3 -c lib/solidity-pipeline/.solhint.json --max-warnings 0 'src/**/*.sol'` | clean on `src/`; the copied `[lint]` block matches the canonical one |
 | Unit + fuzz + invariant | `forge test` | **90 tests**, 7 suites; 6 invariants at 16,384 calls each, 0 reverts |
 | Coverage | `lib/solidity-pipeline/scripts/coverage.sh` | **100%** lines / statements / branches / functions across all six `src/` files, no exclusions |
 | Static analysis | `slither . --config-file lib/solidity-pipeline/slither.config.json --ignore-compile --fail-low` | 0 results at `fail_on: low` |
 | Property fuzzing (Echidna) | `echidna . --contract Properties --config echidna.yaml` | **6/6** properties over 100,000 calls |
 | Property fuzzing (Medusa) | `medusa fuzz --config medusa.json` | **6/6** properties over 100,000 calls |
 | Doctrine gate | `lib/solidity-pipeline/scripts/no-chain-copy-gate.sh all` | direct-chain only; scan plus self-test |
+
+Lint runs first because it is cheapest: no fuzzing, no coverage run and no chain,
+so a style or natspec regression fails in seconds instead of after the fuzzers.
+`forge lint` is invoked **bare** — passing it a path overrides the `ignore`
+config. Every rule the estate turns off is argued in the pipeline's
+[`docs/forge-lint-rules.md`](https://github.com/pigfox/solidity-pipeline/blob/main/docs/forge-lint-rules.md)
+and [`docs/solhint-rules.md`](https://github.com/pigfox/solidity-pipeline/blob/main/docs/solhint-rules.md).
 
 A single harness, `test/Properties.sol`, is driven by **all three** engines —
 Foundry's invariant runner, Echidna and Medusa — so a property cannot hold under
